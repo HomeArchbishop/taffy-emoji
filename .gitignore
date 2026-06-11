@@ -15,4 +15,4 @@ outputs/
 .claude
 .ruff_cache/
 
-./checkpoints/
+data

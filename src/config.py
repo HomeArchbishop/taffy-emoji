@@ -3,9 +3,11 @@ import torch
 
 ROOT        = Path(__file__).parents[1]
 DATA_DIR    = ROOT / "data"
+CACHE_DIR   = DATA_DIR / "cache" / "ace-taffy-images"
 CKPT_DIR    = ROOT / "checkpoints"
 OUTPUTS_DIR = ROOT / "outputs"
 
+DATA_DIR.mkdir(exist_ok=True)
 CKPT_DIR.mkdir(exist_ok=True)
 OUTPUTS_DIR.mkdir(exist_ok=True)
 

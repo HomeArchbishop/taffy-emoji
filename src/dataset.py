@@ -1,10 +1,13 @@
+import json
 from pathlib import Path
 
 import torch
 from PIL import Image, ImageFile
 from torch.utils.data import Dataset
 from torchvision import transforms
+from tqdm import tqdm
 
+from .config import CACHE_DIR
 from .model import IMG_SIZE, MEAN, STD
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -41,6 +44,57 @@ def open_image(path: Path) -> Image.Image:
 def list_images(image_dir: Path) -> list[str]:
     return sorted(f.name for f in image_dir.iterdir()
                   if f.suffix.lower() in IMAGE_EXTS)
+
+
+def _cache_complete(cache_dir: Path, n: int) -> bool:
+    labels_file = cache_dir / "labels.json"
+    images_dir  = cache_dir / "images"
+    if not labels_file.exists() or not images_dir.is_dir():
+        return False
+    labels = json.loads(labels_file.read_text())["labels"]
+    if len(labels) != n:
+        return False
+    return sum(1 for _ in images_dir.glob("*.jpg")) == n
+
+
+def ensure_cached(hf_ds, cache_dir: Path = CACHE_DIR) -> list[int]:
+    """Export HF images to local JPEG cache for fast DataLoader reads."""
+    images_dir  = cache_dir / "images"
+    labels_file = cache_dir / "labels.json"
+    images_dir.mkdir(parents=True, exist_ok=True)
+
+    n = len(hf_ds)
+    if _cache_complete(cache_dir, n):
+        return json.loads(labels_file.read_text())["labels"]
+
+    labels = [int(x) for x in hf_ds["label"]]
+    missing = [i for i in range(n) if not (images_dir / f"{i}.jpg").exists()]
+    if missing:
+        print(f"caching {len(missing)} images → {cache_dir}")
+        for i in tqdm(missing, desc="cache"):
+            hf_ds[i]["image"].convert("RGB").save(images_dir / f"{i}.jpg", "JPEG", quality=95)
+
+    labels_file.write_text(json.dumps({"labels": labels}))
+    return labels
+
+
+class CachedEmojiDataset(Dataset):
+    """Reads pre-cached local JPEGs."""
+
+    def __init__(self, cache_dir: Path, indices: list[int], labels: list[int], transform):
+        self.images_dir = cache_dir / "images"
+        self.indices    = indices
+        self.labels     = labels
+        self.transform  = transform
+
+    def __len__(self) -> int:
+        return len(self.indices)
+
+    def __getitem__(self, idx):
+        i = self.indices[idx]
+        return self.transform(open_image(self.images_dir / f"{i}.jpg")), torch.tensor(
+            self.labels[i], dtype=torch.float32
+        )
 
 
 class HFEmojiDataset(Dataset):
