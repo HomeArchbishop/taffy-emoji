@@ -48,10 +48,10 @@ uv run python -m src.predict --val                        # 验证集阈值扫�
 uv run python -m src.predict --ckpt checkpoints/best.pth  # 指定 checkpoint   
 ```
 
-# License
+## License
 
 AGPL-3.0
 
-# Acknowledgments
+## Acknowledgments
 
 文档顶部动图来自 [春也Haruya](https://space.bilibili.com/3280)。
