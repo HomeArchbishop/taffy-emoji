@@ -40,9 +40,12 @@ uv run python -m src.train --resume  # 从 checkpoints/best.pth 继续
 ## 推理
 
 ```bash
-uv run python -m src.predict --dir data/mydir   # 指定目录 -> outputs/<dir>_predictions.json
-uv run python -m src.predict path/to/img.jpg    # 单张图片 -> 打印结果
-uv run python -m src.predict --threshold 0.6
+uv run python -m src.predict path/to/img.jpg              # 单张图片 -> 打印结果
+uv run python -m src.predict https://example.com/x.jpg   # URL -> 打印结果
+uv run python -m src.predict --dir data/mydir             # 目录 -> outputs/<dir>_predictions.json
+uv run python -m src.predict --threshold 0.6              # 自定义阈值（默认 0.5）
+uv run python -m src.predict --val                        # 验证集阈值扫描，输出各阈值指标
+uv run python -m src.predict --ckpt checkpoints/best.pth  # 指定 checkpoint   
 ```
 
 # License
