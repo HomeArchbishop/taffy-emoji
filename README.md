@@ -15,7 +15,7 @@ Very Simple Binary Classifier.
 EfficientNet-B0 backbone（ImageNet 预训练）提取 1280-dim 特征，接自定义头：
 
 ```
-Dropout(0.4) -> Linear(1280 → 1)
+Dropout(0.4) -> Linear(1280 -> 1)
 ```
 
 推理时最后接 sigmoid 输出概率。
